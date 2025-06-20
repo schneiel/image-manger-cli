@@ -66,7 +66,7 @@ Organize images from a source directory into `YYYY/MM` folders under a destinati
 Scan a directory for duplicate images and process them based on the configured strategy:
 
 ```bash
-./ImageManager dedup --source "/path/to/images" --lang "en"
+./ImageManager dedup --source "/path/to/images"
 ```
 
 ---
@@ -114,14 +114,8 @@ destination: "/path/to/images_sorted"
 dry_run: true
 
 deduplicator:
-  actionStrategy: "moveToTrash"         # Options: "dryRun", "moveToTrash"
+  actionStrategy: "moveToTrash"         # Options: "moveToTrash"
   keepStrategy: "keepOldest"            # Options: "keepOldest", "keepShortestPath"
-
-date:
-  strategies:
-    - "exif"
-    - "creationTime"
-    - "modTime"
 ```
 
 ---
@@ -154,6 +148,7 @@ Language selection via `--lang` flag.
 ## 📌 Planned Improvements (WIP)
 
 - Configuration validation
+- Improved configuration 
 - GUI
 - Additional file formats and hash strategies
 - Expanded language support
