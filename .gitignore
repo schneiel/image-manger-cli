@@ -1,33 +1,75 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-*.sh
+# =======================================================
+# ImageManagerGo .gitignore
+# =======================================================
 
-# Test binary, built with `go test -c`
-*.test
+# Operating System files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+._*
+*~
+*.swp
+*.swo
 
-# Code coverage profiles and other test artifacts
-*.out
-coverage.*
-*.coverprofile
-profile.cov
-
-# Go workspace file
-go.work
-go.work.sum
-
-# env file
-.env
-
-# Editor/IDE
+# IDE and Editor configurations
 .idea/
 .vscode/
+*.sublime-project
+*.sublime-workspace
 
-# ImageManger Fils
-application.log
-dedup_dry_run_log.csv
-sort_dry_run_log.csv
+# Log files
+*.log
+
+# Coverage files
+coverage.out
+*.out
+coverage/
+
+# Workspace files
+go.work.sum
+
+# Build artifacts
+ImageManager
+
+# Temporary files
+*.tmp
+temp-*
+
+# Generated test files
+*_chaos_test.go
+*_property_test.go
+*_stress_test.go
+*_benchmark_test.go
+*_cpu_benchmark_test.go
+*_io_benchmark_test.go
+*_integration_test.go
+*_internal_test.go
+*_contract_test.go
+
+# Project-specific tool configurations
+# Note: justfile kept in project for team consistency
+
+# Configuration and credential files
 config.yaml
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+*credentials*
+*secrets*
+*tokens*
+config.json
+settings.json
+
+# Go testdata directories
+testdata/
+**/testdata/
+
+# Cache and temporary directories
+*.cache
+cache/

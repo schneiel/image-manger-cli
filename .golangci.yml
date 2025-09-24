@@ -1,0 +1,35 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - ineffassign
+    - revive
+    - gocritic
+    - gosec
+    - misspell
+    - errorlint
+    - testifylint
+    - thelper
+    - paralleltest
+    - prealloc
+    - makezero
+    - gocyclo
+    - gocognit
+    - decorder
+    - importas
+    - errname
+    - whitespace
+    - godot
+    - contextcheck
+    - bodyclose
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
