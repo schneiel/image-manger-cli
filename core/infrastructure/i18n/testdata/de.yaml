@@ -1,2 +1,0 @@
-test_message: "Hallo, Welt!"
-test_template: "Hallo, {{.Name}}!"

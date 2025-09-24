@@ -1,75 +1,33 @@
-# =======================================================
-# ImageManagerGo .gitignore
-# =======================================================
+# Rust Build Files
+/target/
 
-# Operating System files
+# MacOS
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Windows
 Thumbs.db
+Thumbs.db:encryptable
 ehthumbs.db
 ehthumbs_vista.db
-._*
-*~
-*.swp
-*.swo
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
 
-# IDE and Editor configurations
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# IDEs
 .idea/
 .vscode/
-*.sublime-project
-*.sublime-workspace
-
-# Log files
-*.log
-
-# Coverage files
-coverage.out
-*.out
-coverage/
-
-# Workspace files
-go.work.sum
-
-# Build artifacts
-ImageManager
-
-# Temporary files
+*.swp
+*.swo
+*~
+.bak
 *.tmp
-temp-*
-
-# Generated test files
-*_chaos_test.go
-*_property_test.go
-*_stress_test.go
-*_benchmark_test.go
-*_cpu_benchmark_test.go
-*_io_benchmark_test.go
-*_integration_test.go
-*_internal_test.go
-*_contract_test.go
-
-# Project-specific tool configurations
-# Note: justfile kept in project for team consistency
-
-# Configuration and credential files
-config.yaml
-.env
-.env.*
-*.key
-*.pem
-*.p12
-*.pfx
-*credentials*
-*secrets*
-*tokens*
-config.json
-settings.json
-
-# Go testdata directories
-testdata/
-**/testdata/
-
-# Cache and temporary directories
-*.cache
-cache/
