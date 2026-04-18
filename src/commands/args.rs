@@ -113,14 +113,18 @@ impl Default for DuplicatesArgs {
 
 impl DuplicatesArgs {
     pub fn get_similarity_threshold(&self) -> Result<SimilarityThreshold, String> {
-        if let Some(preset_level) = self.sensitivity {
-            Ok(preset_level.into())
-        } else if let Some(custom_threshold) = self.threshold {
-            SimilarityThreshold::new(custom_threshold)
-                .map_err(|e| format!("Invalid threshold: {}", e))
-        } else {
-            Ok(SimilarityThreshold::medium())
-        }
+        self.sensitivity.map_or_else(
+            || {
+                self.threshold.map_or_else(
+                    || Ok(SimilarityThreshold::medium()),
+                    |custom_threshold| {
+                        SimilarityThreshold::new(custom_threshold)
+                            .map_err(|e| format!("Invalid threshold: {e}"))
+                    },
+                )
+            },
+            |preset_level| Ok(preset_level.into()),
+        )
     }
 }
 
@@ -138,13 +142,13 @@ pub enum ImageFormatFilter {
 impl From<ImageFormatFilter> for image_manager_lib::config::ImageFormat {
     fn from(filter: ImageFormatFilter) -> Self {
         match filter {
-            ImageFormatFilter::Jpeg => image_manager_lib::config::ImageFormat::Jpeg,
-            ImageFormatFilter::Png => image_manager_lib::config::ImageFormat::Png,
-            ImageFormatFilter::Gif => image_manager_lib::config::ImageFormat::Gif,
-            ImageFormatFilter::Tiff => image_manager_lib::config::ImageFormat::Tiff,
-            ImageFormatFilter::WebP => image_manager_lib::config::ImageFormat::WebP,
-            ImageFormatFilter::Bmp => image_manager_lib::config::ImageFormat::Bmp,
-            ImageFormatFilter::Ico => image_manager_lib::config::ImageFormat::Ico,
+            ImageFormatFilter::Jpeg => Self::Jpeg,
+            ImageFormatFilter::Png => Self::Png,
+            ImageFormatFilter::Gif => Self::Gif,
+            ImageFormatFilter::Tiff => Self::Tiff,
+            ImageFormatFilter::WebP => Self::WebP,
+            ImageFormatFilter::Bmp => Self::Bmp,
+            ImageFormatFilter::Ico => Self::Ico,
         }
     }
 }
@@ -162,9 +166,9 @@ pub enum ThresholdLevel {
 impl From<ThresholdLevel> for SimilarityThreshold {
     fn from(level: ThresholdLevel) -> Self {
         match level {
-            ThresholdLevel::Low => SimilarityThreshold::low(),
-            ThresholdLevel::Medium => SimilarityThreshold::medium(),
-            ThresholdLevel::High => SimilarityThreshold::high(),
+            ThresholdLevel::Low => Self::low(),
+            ThresholdLevel::Medium => Self::medium(),
+            ThresholdLevel::High => Self::high(),
         }
     }
 }
@@ -180,10 +184,8 @@ pub enum DuplicateScanMode {
 impl From<DuplicateScanMode> for image_manager_lib::config::DuplicateMode {
     fn from(mode: DuplicateScanMode) -> Self {
         match mode {
-            DuplicateScanMode::SizeFiltered => {
-                image_manager_lib::config::DuplicateMode::SizeFiltered
-            }
-            DuplicateScanMode::Complete => image_manager_lib::config::DuplicateMode::Complete,
+            DuplicateScanMode::SizeFiltered => Self::SizeFiltered,
+            DuplicateScanMode::Complete => Self::Complete,
         }
     }
 }

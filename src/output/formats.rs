@@ -90,11 +90,10 @@ pub fn print_duplicates_preview(
             println!("   Files: {}", style(group.len()).yellow());
 
             for (file_index, file) in group.iter().enumerate() {
-                let size_str = if let Ok(metadata) = std::fs::metadata(file) {
-                    format!(" ({})", style(format_bytes(metadata.len())).dim())
-                } else {
-                    String::new()
-                };
+                let size_str = std::fs::metadata(file).map_or_else(
+                    |_| String::new(),
+                    |metadata| format!(" ({})", style(format_bytes(metadata.len())).dim()),
+                );
 
                 println!(
                     "   {}. {}{}",
@@ -119,7 +118,7 @@ pub fn print_errors(errors: &[ProcessingError]) {
         println!("{}", style("━".repeat(30)).dim());
 
         for error in errors.iter().take(10) {
-            println!("  {}", style(format!("• {}", error)).red());
+            println!("  {}", style(format!("• {error}")).red());
         }
 
         if errors.len() > 10 {
@@ -132,6 +131,7 @@ pub fn print_errors(errors: &[ProcessingError]) {
     }
 }
 
+#[allow(clippy::cast_precision_loss)]
 fn format_bytes(bytes: u64) -> String {
     const UNITS: &[&str] = &["B", "KB", "MB", "GB"];
     let mut size = bytes as f64;

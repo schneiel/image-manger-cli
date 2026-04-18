@@ -13,8 +13,8 @@ use crate::progress::{config, create_scanner_progress, start_progress_monitoring
 use crate::utils::{date_utils, file_ops, validation};
 use crate::FILES;
 
-pub fn handle_organize(args: OrganizeArgs) -> Result<()> {
-    validation::validate_organize_args(&args)?;
+pub fn handle_organize(args: &OrganizeArgs) -> Result<()> {
+    validation::validate_organize_args(args)?;
 
     let progress = create_scanner_progress();
     progress.set_message("Initializing image manager...");
@@ -29,7 +29,7 @@ pub fn handle_organize(args: OrganizeArgs) -> Result<()> {
         config.supported_formats = vec![format_filter.clone().into()];
     }
 
-    let manager = ImageManager::with_config(config.clone());
+    let manager = ImageManager::with_config(config);
     progress.finish_with_message("Image manager initialized");
 
     let progress_handle = image_manager_lib::ProgressHandle::new();
@@ -66,13 +66,13 @@ pub fn handle_organize(args: OrganizeArgs) -> Result<()> {
     }
 
     if let Some(export_path) = &args.export {
-        let total_processed: usize = organized_images.values().map(|v| v.len()).sum();
+        let total_processed: usize = organized_images.values().map(std::vec::Vec::len).sum();
         let target_config = TargetConfig {
             base_path: args.target_path.clone(),
         };
 
         let export_data_obj = ExportData::organize(
-            organized_images.clone(),
+            &organized_images,
             target_config,
             args.directory.clone(),
             total_processed,
@@ -101,7 +101,7 @@ pub fn handle_organize(args: OrganizeArgs) -> Result<()> {
         organized_images
     };
 
-    display_organize_results(&final_organized_images, &errors, &args)?;
+    display_organize_results(&final_organized_images, &errors, args)?;
 
     Ok(())
 }
@@ -119,13 +119,16 @@ fn display_organize_results(
     println!("{}", style("━".repeat(50)).dim());
     print_organize_preview(organized_images, errors, args.target_path.as_ref());
 
-    let error_strings: Vec<String> = errors.iter().map(|e| e.to_string()).collect();
+    let error_strings: Vec<String> = errors
+        .iter()
+        .map(std::string::ToString::to_string)
+        .collect();
 
     display_errors(&error_strings, "Processing Errors");
 
     if args.copy {
         if let Some(target_path) = &args.target_path {
-            let target_dir = file_ops::get_target_directory(target_path)?;
+            let target_dir = file_ops::get_target_directory(target_path);
             println!(
                 "\n{} {}",
                 style("📁").blue(),
@@ -140,7 +143,7 @@ fn display_organize_results(
                 style(
                     organized_images
                         .values()
-                        .map(|v| v.len())
+                        .map(std::vec::Vec::len)
                         .sum::<usize>()
                         .to_string()
                 )
@@ -160,9 +163,9 @@ fn copy_files_to_target(
     organized_images: &HashMap<String, Vec<PathBuf>>,
     target_base: &std::path::Path,
 ) -> Result<HashMap<String, Vec<PathBuf>>> {
-    let target_dir = file_ops::get_target_directory(target_base)?;
+    let target_dir = file_ops::get_target_directory(target_base);
 
-    let total_files: usize = organized_images.values().map(|v| v.len()).sum();
+    let total_files: usize = organized_images.values().map(std::vec::Vec::len).sum();
     if total_files == 0 {
         return Ok(HashMap::new());
     }
@@ -253,7 +256,7 @@ fn display_errors(errors: &[String], error_type: &str) {
         println!("{}", style("━".repeat(30)).dim());
 
         for error in errors.iter().take(config::MAX_DISPLAY_ITEMS) {
-            println!("  {}", style(format!("• {}", error)).red());
+            println!("  {}", style(format!("• {error}")).red());
         }
 
         if errors.len() > config::MAX_DISPLAY_ITEMS {

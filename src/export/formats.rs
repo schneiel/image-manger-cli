@@ -18,13 +18,13 @@ impl Exporter for CsvExporter {
                 file_records,
                 target_config,
             } => {
-                self.export_organize_csv(&mut file, file_records, target_config)?;
+                Self::export_organize_csv(&mut file, file_records, target_config)?;
             }
             ExportDataType::Duplicates {
                 file_records,
                 similarity_threshold,
             } => {
-                self.export_duplicates_csv(&mut file, file_records, *similarity_threshold)?;
+                Self::export_duplicates_csv(&mut file, file_records, *similarity_threshold)?;
             }
         }
 
@@ -34,7 +34,6 @@ impl Exporter for CsvExporter {
 
 impl CsvExporter {
     fn export_organize_csv(
-        &self,
         file: &mut File,
         file_records: &[crate::export::data::OrganizeFileRecord],
         _target_config: &crate::export::data::TargetConfig,
@@ -61,7 +60,6 @@ impl CsvExporter {
     }
 
     fn export_duplicates_csv(
-        &self,
         file: &mut File,
         file_records: &[crate::export::data::DuplicateFileRecord],
         _similarity_threshold: f32,

@@ -67,14 +67,14 @@ pub struct DuplicateGroup {
 
 impl ExportData {
     pub fn organize(
-        organized_files: HashMap<String, Vec<PathBuf>>,
+        organized_files: &HashMap<String, Vec<PathBuf>>,
         target_config: TargetConfig,
         source_directory: PathBuf,
         total_processed: usize,
     ) -> Self {
         let mut file_records = Vec::new();
 
-        for (date, files) in &organized_files {
+        for (date, files) in organized_files {
             for file_path in files {
                 let file_name = file_path
                     .file_name()
@@ -88,21 +88,24 @@ impl ExportData {
                     .unwrap_or("")
                     .to_string();
 
-                let file_size = std::fs::metadata(file_path).map(|m| m.len()).unwrap_or(0);
+                let file_size = std::fs::metadata(file_path).map_or(0, |m| m.len());
 
-                let target_path = if let Some(base_path) = &target_config.base_path {
-                    let dir_name = base_path
-                        .file_name()
-                        .and_then(|name| name.to_str())
-                        .unwrap_or("untitled");
-                    PathBuf::from(format!("{}/{}/{}", dir_name, date, file_name))
-                } else {
-                    let source_dir_name = source_directory
-                        .file_name()
-                        .and_then(|name| name.to_str())
-                        .unwrap_or("untitled");
-                    PathBuf::from(format!("{}/{}/{}", source_dir_name, date, file_name))
-                };
+                let target_path = target_config.base_path.as_ref().map_or_else(
+                    || {
+                        let source_dir_name = source_directory
+                            .file_name()
+                            .and_then(|name| name.to_str())
+                            .unwrap_or("untitled");
+                        PathBuf::from(format!("{source_dir_name}/{date}/{file_name}"))
+                    },
+                    |base_path| {
+                        let dir_name = base_path
+                            .file_name()
+                            .and_then(|name| name.to_str())
+                            .unwrap_or("untitled");
+                        PathBuf::from(format!("{dir_name}/{date}/{file_name}"))
+                    },
+                );
 
                 file_records.push(OrganizeFileRecord {
                     original_path: file_path.clone(),
@@ -140,14 +143,14 @@ impl ExportData {
     }
 
     pub fn duplicates(
-        duplicate_groups: Vec<DuplicateGroup>,
+        duplicate_groups: &[DuplicateGroup],
         similarity_threshold: f32,
         source_directory: PathBuf,
         total_processed: usize,
     ) -> Self {
         let mut file_records = Vec::new();
 
-        for group in &duplicate_groups {
+        for group in duplicate_groups {
             for (position, file_path) in group.files.iter().enumerate() {
                 let file_extension = file_path
                     .extension()
@@ -155,7 +158,7 @@ impl ExportData {
                     .unwrap_or("")
                     .to_string();
 
-                let file_size = std::fs::metadata(file_path).map(|m| m.len()).unwrap_or(0);
+                let file_size = std::fs::metadata(file_path).map_or(0, |m| m.len());
 
                 file_records.push(DuplicateFileRecord {
                     file_path: file_path.clone(),

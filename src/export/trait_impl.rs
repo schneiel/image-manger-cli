@@ -17,15 +17,15 @@ pub enum ExportFormat {
 impl ExportFormat {
     pub fn create_exporter(self) -> Box<dyn Exporter> {
         match self {
-            ExportFormat::Csv => Box::new(CsvExporter),
-            ExportFormat::Json => Box::new(JsonExporter),
+            Self::Csv => Box::new(CsvExporter),
+            Self::Json => Box::new(JsonExporter),
         }
     }
 
-    pub fn name(self) -> &'static str {
+    pub const fn name(self) -> &'static str {
         match self {
-            ExportFormat::Csv => "CSV",
-            ExportFormat::Json => "JSON",
+            Self::Csv => "CSV",
+            Self::Json => "JSON",
         }
     }
 }

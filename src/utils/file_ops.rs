@@ -16,7 +16,7 @@ pub fn get_unique_filename(target_path: &Path) -> Result<PathBuf> {
     let mut new_path = target_path.to_path_buf();
 
     while new_path.exists() {
-        let new_stem = format!("{}_{}", stem, counter);
+        let new_stem = format!("{stem}_{counter}");
         new_path = target_path.with_file_name(new_stem);
         if let Some(ext) = extension {
             new_path = new_path.with_extension(ext);
@@ -34,8 +34,8 @@ pub fn get_unique_filename(target_path: &Path) -> Result<PathBuf> {
     Ok(new_path)
 }
 
-pub fn get_target_directory(base_path: &Path) -> Result<PathBuf> {
-    Ok(base_path.to_path_buf())
+pub fn get_target_directory(base_path: &Path) -> PathBuf {
+    base_path.to_path_buf()
 }
 
 #[cfg(test)]

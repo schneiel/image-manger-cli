@@ -37,11 +37,11 @@ fn main() {
     let cli = Cli::parse();
 
     match run(cli) {
-        Ok(_) => {
+        Ok(()) => {
             println!("\n{}", style("✓ Operation completed successfully").green());
         }
         Err(e) => {
-            eprintln!("\n{} {}", WARNING, style(format!("Error: {}", e)).red());
+            eprintln!("\n{} {}", WARNING, style(format!("Error: {e}")).red());
             std::process::exit(1);
         }
     }
@@ -55,7 +55,7 @@ fn run(cli: Cli) -> Result<()> {
                 LOOKING_GLASS,
                 style("Organize").cyan()
             );
-            handle_organize(args)
+            handle_organize(&args)
         }
         Commands::Duplicates(args) => {
             println!(
@@ -63,7 +63,7 @@ fn run(cli: Cli) -> Result<()> {
                 LOOKING_GLASS,
                 style("Duplicates").cyan()
             );
-            handle_duplicates(args)
+            handle_duplicates(&args)
         }
     }
 }

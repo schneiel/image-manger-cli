@@ -24,7 +24,7 @@ pub fn create_processor_progress() -> ProgressBar {
     let progress = ProgressBar::new_spinner();
     progress.set_style(
         ProgressStyle::default_spinner()
-            .template("{spinner:.green} {msg:.cyan}")
+            .template("{spinner:.green} {msg}")
             .unwrap(),
     );
     progress.enable_steady_tick(config::SPINNER_UPDATE_INTERVAL);
@@ -48,14 +48,13 @@ pub fn start_progress_monitoring(
 ) -> std::thread::JoinHandle<()> {
     let spinner = create_processor_progress();
     spinner.set_message(initial_message.to_string());
-    let spinner_clone = spinner.clone();
 
     std::thread::spawn(move || {
         while !progress_handle.is_complete() {
             let info = progress_handle.get_progress();
             let current_file = info.current_file.as_deref().unwrap_or("processing...");
 
-            spinner_clone.set_message(format!(
+            spinner.set_message(format!(
                 "{}: {:.1}% - {}",
                 info.phase.name(),
                 info.percentage.unwrap_or(0.0),
@@ -64,6 +63,6 @@ pub fn start_progress_monitoring(
 
             std::thread::sleep(config::DEFAULT_PROGRESS_INTERVAL);
         }
-        spinner_clone.finish_with_message("Operation completed");
+        spinner.finish_with_message("Operation completed");
     })
 }

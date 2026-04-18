@@ -59,8 +59,7 @@ pub fn validate_organize_args(args: &crate::commands::OrganizeArgs) -> Result<()
 pub fn validate_similarity_threshold(threshold: f32) -> Result<()> {
     if !(0.0..=1.0).contains(&threshold) {
         return Err(anyhow::anyhow!(
-            "Similarity threshold must be between 0.0 and 1.0, got: {}",
-            threshold
+            "Similarity threshold must be between 0.0 and 1.0, got: {threshold}"
         ));
     }
     Ok(())

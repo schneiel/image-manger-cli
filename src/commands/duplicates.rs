@@ -9,8 +9,8 @@ use crate::progress::{config, create_scanner_progress, start_progress_monitoring
 use crate::utils::validation;
 use crate::DUPLICATE;
 
-pub fn handle_duplicates(args: DuplicatesArgs) -> Result<()> {
-    validation::validate_duplicates_args(&args)?;
+pub fn handle_duplicates(args: &DuplicatesArgs) -> Result<()> {
+    validation::validate_duplicates_args(args)?;
 
     let progress = create_scanner_progress();
     progress.set_message("Initializing image manager...");
@@ -19,7 +19,7 @@ pub fn handle_duplicates(args: DuplicatesArgs) -> Result<()> {
         recursive_scan: args.recursive,
         similarity_threshold: args
             .get_similarity_threshold()
-            .map_err(|e| anyhow::anyhow!("Invalid similarity threshold: {}", e))?,
+            .map_err(|e| anyhow::anyhow!("Invalid similarity threshold: {e}"))?,
         parallel_processing: true,
         ..Default::default()
     };
@@ -52,7 +52,7 @@ pub fn handle_duplicates(args: DuplicatesArgs) -> Result<()> {
     display_duplicates_results(
         &duplicate_groups,
         &errors,
-        &args,
+        args,
         &config.similarity_threshold,
     )?;
 
@@ -75,7 +75,7 @@ fn display_duplicates_results(
     print_duplicates_preview(duplicate_groups, errors, similarity_threshold);
 
     if let Some(export_path) = &args.export {
-        let total_processed: usize = duplicate_groups.iter().map(|group| group.len()).sum();
+        let total_processed: usize = duplicate_groups.iter().map(std::vec::Vec::len).sum();
 
         let export_duplicate_groups: Vec<DuplicateGroup> = duplicate_groups
             .iter()
@@ -88,7 +88,7 @@ fn display_duplicates_results(
             .collect();
 
         let export_data_obj = ExportData::duplicates(
-            export_duplicate_groups,
+            &export_duplicate_groups,
             similarity_threshold.value(),
             args.directory.clone(),
             total_processed,
@@ -105,7 +105,10 @@ fn display_duplicates_results(
         println!("   Location: {}", style(export_path.display()).cyan());
     }
 
-    let error_strings: Vec<String> = errors.iter().map(|e| e.to_string()).collect();
+    let error_strings: Vec<String> = errors
+        .iter()
+        .map(std::string::ToString::to_string)
+        .collect();
 
     display_errors(&error_strings, "Processing Errors");
 
@@ -118,7 +121,7 @@ fn display_errors(errors: &[String], error_type: &str) {
         println!("{}", style("━".repeat(30)).dim());
 
         for error in errors.iter().take(config::MAX_DISPLAY_ITEMS) {
-            println!("  {}", style(format!("• {}", error)).red());
+            println!("  {}", style(format!("• {error}")).red());
         }
 
         if errors.len() > config::MAX_DISPLAY_ITEMS {
