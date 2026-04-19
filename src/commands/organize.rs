@@ -47,7 +47,9 @@ pub fn handle_organize(args: &OrganizeArgs) -> Result<()> {
             )
         })?;
 
-    let _ = monitor_handle.join();
+    if let Err(e) = monitor_handle.join() {
+        tracing::warn!("progress monitoring thread failed: {:?}", e);
+    }
 
     let elapsed = operation_start.elapsed();
     println!(
@@ -198,12 +200,16 @@ fn copy_files_to_target(
             }
 
             for file in files {
-                progress.set_message(format!(
-                    "Copying {}",
-                    file.file_name().unwrap_or_default().to_string_lossy()
-                ));
+                let file_name = file.file_name().map_or_else(
+                    || String::from("unnamed"),
+                    |n| n.to_string_lossy().to_string(),
+                );
+                progress.set_message(format!("Copying {file_name}"));
 
-                let target_file = date_dir.join(file.file_name().unwrap_or_default());
+                let target_file = date_dir.join(
+                    file.file_name()
+                        .unwrap_or_else(|| std::ffi::OsStr::new("unnamed")),
+                );
 
                 let final_target_file = if target_file.exists() {
                     match file_ops::get_unique_filename(&target_file) {

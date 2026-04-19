@@ -14,7 +14,7 @@ pub fn create_scanner_progress() -> ProgressBar {
     progress.set_style(
         ProgressStyle::default_spinner()
             .template("{spinner:.green} {msg}")
-            .unwrap(),
+            .expect("spinner template is valid by construction"),
     );
     progress.enable_steady_tick(config::DEFAULT_PROGRESS_INTERVAL);
     progress
@@ -25,7 +25,7 @@ pub fn create_processor_progress() -> ProgressBar {
     progress.set_style(
         ProgressStyle::default_spinner()
             .template("{spinner:.green} {msg}")
-            .unwrap(),
+            .expect("spinner template is valid by construction"),
     );
     progress.enable_steady_tick(config::SPINNER_UPDATE_INTERVAL);
     progress
@@ -36,7 +36,7 @@ pub fn create_copy_progress(total: u64) -> ProgressBar {
     progress.set_style(
         ProgressStyle::default_bar()
             .template("{spinner:.green} [{bar:40.cyan/blue}] {pos}/{len} {msg}")
-            .unwrap()
+            .expect("bar template is valid by construction")
             .progress_chars("#>-"),
     );
     progress

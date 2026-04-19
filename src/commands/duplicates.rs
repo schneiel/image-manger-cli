@@ -40,7 +40,9 @@ pub fn handle_duplicates(args: &DuplicatesArgs) -> Result<()> {
         .find_duplicates_with_progress(&args.directory, &progress_handle)
         .with_context(|| "Failed to find duplicates")?;
 
-    let _ = monitor_handle.join();
+    if let Err(e) = monitor_handle.join() {
+        tracing::warn!("progress monitoring thread failed: {:?}", e);
+    }
 
     let elapsed = operation_start.elapsed();
     println!(

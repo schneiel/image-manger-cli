@@ -20,7 +20,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 image = "0.24"
+tracing = "0.1"
 
-# Local development: uncomment to use local version
-# [patch.crates-io]
-# image-manager-lib = { path = "../image-manager-lib" }
+[dev-dependencies]
+tempfile = "3.10"

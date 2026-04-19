@@ -66,7 +66,7 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let base_path = temp_dir.path();
 
-        let result = get_target_directory(base_path).unwrap();
+        let result = get_target_directory(base_path);
         assert_eq!(result, base_path);
     }
 }

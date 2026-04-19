@@ -44,11 +44,11 @@ pub fn print_organize_preview(
         }
 
         for (i, file) in files.iter().enumerate() {
-            println!(
-                "   {}. {}",
-                style(i + 1).dim(),
-                style(file.file_name().unwrap_or_default().to_string_lossy()).cyan()
+            let file_name = file.file_name().map_or_else(
+                || String::from("unnamed"),
+                |n| n.to_string_lossy().to_string(),
             );
+            println!("   {}. {}", style(i + 1).dim(), style(file_name).cyan());
         }
     }
 
