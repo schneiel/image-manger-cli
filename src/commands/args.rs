@@ -1,10 +1,10 @@
 use crate::export::ExportFormat;
 use clap::{Args, ValueEnum};
-use image_manager_lib::SimilarityThreshold;
+use imgdedup::SimilarityThreshold;
 
 #[derive(Args)]
 pub struct OrganizeArgs {
-    #[arg(help = "Directory to scan for images (default: current directory)")]
+    #[arg(help = "Directory to scan for files (default: current directory)")]
     pub directory: std::path::PathBuf,
 
     #[arg(
@@ -14,8 +14,11 @@ pub struct OrganizeArgs {
     )]
     pub recursive: bool,
 
-    #[arg(long, value_enum, help = "Filter by specific image format")]
-    pub format: Option<ImageFormatFilter>,
+    #[arg(
+        long,
+        help = "Filter by file extension (can be specified multiple times, e.g., --extension jpg --extension pdf)"
+    )]
+    pub extension: Vec<String>,
 
     #[arg(long, help = "Export results to file")]
     pub export: Option<std::path::PathBuf>,
@@ -43,7 +46,7 @@ impl Default for OrganizeArgs {
         Self {
             directory: std::path::PathBuf::from("."),
             recursive: false,
-            format: None,
+            extension: Vec::new(),
             export: None,
             export_format: ExportFormat::Csv,
             target_path: None,
@@ -139,7 +142,7 @@ pub enum ImageFormatFilter {
     Ico,
 }
 
-impl From<ImageFormatFilter> for image_manager_lib::config::ImageFormat {
+impl From<ImageFormatFilter> for imgdedup::config::ImageFormat {
     fn from(filter: ImageFormatFilter) -> Self {
         match filter {
             ImageFormatFilter::Jpeg => Self::Jpeg,
@@ -149,6 +152,20 @@ impl From<ImageFormatFilter> for image_manager_lib::config::ImageFormat {
             ImageFormatFilter::WebP => Self::WebP,
             ImageFormatFilter::Bmp => Self::Bmp,
             ImageFormatFilter::Ico => Self::Ico,
+        }
+    }
+}
+
+impl ImageFormatFilter {
+    pub const fn as_extension(&self) -> &'static str {
+        match self {
+            Self::Jpeg => "jpg",
+            Self::Png => "png",
+            Self::Gif => "gif",
+            Self::Tiff => "tiff",
+            Self::WebP => "webp",
+            Self::Bmp => "bmp",
+            Self::Ico => "ico",
         }
     }
 }
@@ -181,7 +198,7 @@ pub enum DuplicateScanMode {
     Complete,
 }
 
-impl From<DuplicateScanMode> for image_manager_lib::config::DuplicateMode {
+impl From<DuplicateScanMode> for imgdedup::config::DuplicateMode {
     fn from(mode: DuplicateScanMode) -> Self {
         match mode {
             DuplicateScanMode::SizeFiltered => Self::SizeFiltered,

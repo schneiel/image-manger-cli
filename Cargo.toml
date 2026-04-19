@@ -3,7 +3,7 @@ name = "image-manager-cli"
 version = "0.1.0"
 edition = "2021"
 authors = ["Elias Schneider <31616053+schneiel@users.noreply.github.com>"]
-description = "A CLI tool for image organization and duplicate detection using the image-manager library"
+description = "A CLI tool for image organization and duplicate detection"
 license = "MIT"
 
 [[bin]]
@@ -11,7 +11,8 @@ name = "image-manager-cli"
 path = "src/main.rs"
 
 [dependencies]
-image-manager-lib = { version = "0.1", git = "https://github.com/schneiel/image-manager-lib" }
+filesort = { git = "https://github.com/schneiel/filesort" }
+imgdedup = { git = "https://github.com/schneiel/imgdedup" }
 clap = { version = "4.4", features = ["derive", "color"] }
 indicatif = "0.17"
 console = "0.15"

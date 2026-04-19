@@ -1,4 +1,3 @@
-use image_manager_lib::ProgressHandle;
 use indicatif::{ProgressBar, ProgressStyle};
 
 pub mod config {
@@ -43,7 +42,21 @@ pub fn create_copy_progress(total: u64) -> ProgressBar {
 }
 
 pub fn start_progress_monitoring(
-    progress_handle: ProgressHandle,
+    progress_handle: imgdedup::ProgressHandle,
+    initial_message: &str,
+) -> std::thread::JoinHandle<()> {
+    start_progress_monitoring_generic(progress_handle, initial_message)
+}
+
+pub fn start_filesort_progress_monitoring(
+    progress_handle: filesort::ProgressHandle,
+    initial_message: &str,
+) -> std::thread::JoinHandle<()> {
+    start_progress_monitoring_generic(progress_handle, initial_message)
+}
+
+fn start_progress_monitoring_generic<T: ProgressTrackerTrait>(
+    progress_handle: T,
     initial_message: &str,
 ) -> std::thread::JoinHandle<()> {
     let spinner = create_processor_progress();
@@ -56,7 +69,7 @@ pub fn start_progress_monitoring(
 
             spinner.set_message(format!(
                 "{}: {:.1}% - {}",
-                info.phase.name(),
+                info.phase,
                 info.percentage.unwrap_or(0.0),
                 current_file
             ));
@@ -65,4 +78,46 @@ pub fn start_progress_monitoring(
         }
         spinner.finish_with_message("Operation completed");
     })
+}
+
+pub trait ProgressTrackerTrait: Send + Sync + 'static {
+    fn is_complete(&self) -> bool;
+    fn get_progress(&self) -> ProgressInfoTrait;
+}
+
+#[derive(Clone)]
+pub struct ProgressInfoTrait {
+    pub phase: &'static str,
+    pub percentage: Option<f64>,
+    pub current_file: Option<String>,
+}
+
+impl ProgressTrackerTrait for imgdedup::ProgressHandle {
+    fn is_complete(&self) -> bool {
+        self.is_complete()
+    }
+
+    fn get_progress(&self) -> ProgressInfoTrait {
+        let info = self.get_progress();
+        ProgressInfoTrait {
+            phase: info.phase.name(),
+            percentage: info.percentage,
+            current_file: info.current_file,
+        }
+    }
+}
+
+impl ProgressTrackerTrait for filesort::ProgressHandle {
+    fn is_complete(&self) -> bool {
+        self.is_complete()
+    }
+
+    fn get_progress(&self) -> ProgressInfoTrait {
+        let info = self.get_progress();
+        ProgressInfoTrait {
+            phase: info.phase.name(),
+            percentage: info.percentage,
+            current_file: info.current_file,
+        }
+    }
 }

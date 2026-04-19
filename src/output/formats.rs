@@ -1,19 +1,19 @@
 use console::style;
+use filesort::ProcessingError;
+use imgdedup::SimilarityThreshold;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use image_manager_lib::ProcessingError;
-
 pub fn print_organize_preview(
-    organized_images: &HashMap<String, Vec<PathBuf>>,
+    organized_files: &HashMap<String, Vec<PathBuf>>,
     errors: &[ProcessingError],
     target_path: Option<&PathBuf>,
 ) {
-    if organized_images.is_empty() && errors.is_empty() {
+    if organized_files.is_empty() && errors.is_empty() {
         println!(
             "\n{} {}",
             style("📭").yellow(),
-            style("No supported images found in directory").bold()
+            style("No files found in directory").bold()
         );
         return;
     }
@@ -25,7 +25,7 @@ pub fn print_organize_preview(
     );
     println!("{}", style("━".repeat(50)).dim());
 
-    for (date, files) in organized_images {
+    for (date, files) in organized_files {
         println!("\n{} {}", style("📅").blue(), style(date).bold());
 
         if let Some(target_path) = target_path {
@@ -56,9 +56,9 @@ pub fn print_organize_preview(
 }
 
 pub fn print_duplicates_preview(
-    duplicate_groups: &image_manager_lib::duplicates::DuplicateGroups,
-    errors: &[ProcessingError],
-    similarity_threshold: &image_manager_lib::SimilarityThreshold,
+    duplicate_groups: &imgdedup::DuplicateGroups,
+    errors: &[imgdedup::ProcessingError],
+    similarity_threshold: &SimilarityThreshold,
 ) {
     if duplicate_groups.is_empty() && errors.is_empty() {
         println!(
@@ -105,10 +105,33 @@ pub fn print_duplicates_preview(
         }
     }
 
-    print_errors(errors);
+    print_errors_duplicates(errors);
 }
 
 pub fn print_errors(errors: &[ProcessingError]) {
+    if !errors.is_empty() {
+        println!(
+            "\n{} {}",
+            style("⚠️").yellow(),
+            style("Processing Errors").yellow()
+        );
+        println!("{}", style("━".repeat(30)).dim());
+
+        for error in errors.iter().take(10) {
+            println!("  {}", style(format!("• {error}")).red());
+        }
+
+        if errors.len() > 10 {
+            println!(
+                "  {} ... and {} more errors",
+                style("•").red(),
+                errors.len() - 10
+            );
+        }
+    }
+}
+
+pub fn print_errors_duplicates(errors: &[imgdedup::ProcessingError]) {
     if !errors.is_empty() {
         println!(
             "\n{} {}",

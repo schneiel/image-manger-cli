@@ -1,15 +1,13 @@
 use anyhow::{Context, Result};
 use console::style;
+use filesort::{FileSortConfig, FileSorter, ProgressHandle};
 use std::collections::HashMap;
 use std::fs;
-use std::path::PathBuf;
-
-use image_manager_lib::{ImageManager, ImageManagerConfig};
 
 use super::OrganizeArgs;
 use crate::export::{data::TargetConfig, export_data, ExportData};
 use crate::output::print_organize_preview;
-use crate::progress::{config, create_scanner_progress, start_progress_monitoring};
+use crate::progress::{config, create_scanner_progress, start_filesort_progress_monitoring};
 use crate::utils::{date_utils, file_ops, validation};
 use crate::FILES;
 
@@ -17,32 +15,34 @@ pub fn handle_organize(args: &OrganizeArgs) -> Result<()> {
     validation::validate_organize_args(args)?;
 
     let progress = create_scanner_progress();
-    progress.set_message("Initializing image manager...");
+    progress.set_message("Initializing file sorter...");
 
-    let mut config = ImageManagerConfig {
+    let mut config = FileSortConfig {
         recursive_scan: args.recursive,
         parallel_processing: true,
-        ..Default::default()
+        max_file_size: None,
+        extensions_filter: None,
     };
 
-    if let Some(ref format_filter) = args.format {
-        config.supported_formats = vec![format_filter.clone().into()];
+    if !args.extension.is_empty() {
+        config.extensions_filter = Some(args.extension.clone());
     }
 
-    let manager = ImageManager::with_config(config);
-    progress.finish_with_message("Image manager initialized");
+    let sorter = FileSorter::with_config(config);
+    progress.finish_with_message("File sorter initialized");
 
-    let progress_handle = image_manager_lib::ProgressHandle::new();
+    let progress_handle = ProgressHandle::new();
     let progress_for_monitoring = progress_handle.clone();
 
-    let monitor_handle = start_progress_monitoring(progress_for_monitoring, "Organizing images...");
+    let monitor_handle =
+        start_filesort_progress_monitoring(progress_for_monitoring, "Organizing files...");
 
     let operation_start = std::time::Instant::now();
-    let (organized_images, errors) = manager
+    let (organized_files, errors) = sorter
         .organize_by_date_with_progress(&args.directory, &progress_handle)
         .with_context(|| {
             format!(
-                "Failed to organize images in directory: {}",
+                "Failed to organize files in directory: {}",
                 args.directory.display()
             )
         })?;
@@ -58,23 +58,23 @@ pub fn handle_organize(args: &OrganizeArgs) -> Result<()> {
         elapsed.as_secs_f64()
     );
 
-    if organized_images.is_empty() && errors.is_empty() {
+    if organized_files.is_empty() && errors.is_empty() {
         println!(
             "\n{} {}",
             style("📭").yellow(),
-            style("No supported images found in directory").bold()
+            style("No files found in directory").bold()
         );
         return Ok(());
     }
 
     if let Some(export_path) = &args.export {
-        let total_processed: usize = organized_images.values().map(std::vec::Vec::len).sum();
+        let total_processed: usize = organized_files.values().map(std::vec::Vec::len).sum();
         let target_config = TargetConfig {
             base_path: args.target_path.clone(),
         };
 
         let export_data_obj = ExportData::organize(
-            &organized_images,
+            &organized_files,
             target_config,
             args.directory.clone(),
             total_processed,
@@ -91,26 +91,26 @@ pub fn handle_organize(args: &OrganizeArgs) -> Result<()> {
         println!("   Location: {}", style(export_path.display()).cyan());
     }
 
-    let final_organized_images = if args.copy {
+    let final_organized_files = if args.copy {
         if let Some(target_path) = &args.target_path {
-            copy_files_to_target(&organized_images, target_path)?
+            copy_files_to_target(&organized_files, target_path)?
         } else {
             return Err(anyhow::anyhow!(
                 "--copy flag requires --target-path to be specified"
             ));
         }
     } else {
-        organized_images
+        organized_files
     };
 
-    display_organize_results(&final_organized_images, &errors, args)?;
+    display_organize_results(&final_organized_files, &errors, args)?;
 
     Ok(())
 }
 
 fn display_organize_results(
-    organized_images: &HashMap<String, Vec<PathBuf>>,
-    errors: &[image_manager_lib::ProcessingError],
+    organized_files: &HashMap<String, Vec<std::path::PathBuf>>,
+    errors: &[filesort::ProcessingError],
     args: &OrganizeArgs,
 ) -> Result<()> {
     println!(
@@ -119,7 +119,7 @@ fn display_organize_results(
         style("Organization Preview").bold().cyan()
     );
     println!("{}", style("━".repeat(50)).dim());
-    print_organize_preview(organized_images, errors, args.target_path.as_ref());
+    print_organize_preview(organized_files, errors, args.target_path.as_ref());
 
     let error_strings: Vec<String> = errors
         .iter()
@@ -143,7 +143,7 @@ fn display_organize_results(
             println!(
                 "   Total files copied: {}",
                 style(
-                    organized_images
+                    organized_files
                         .values()
                         .map(std::vec::Vec::len)
                         .sum::<usize>()
@@ -162,12 +162,12 @@ fn display_organize_results(
 }
 
 fn copy_files_to_target(
-    organized_images: &HashMap<String, Vec<PathBuf>>,
+    organized_files: &HashMap<String, Vec<std::path::PathBuf>>,
     target_base: &std::path::Path,
-) -> Result<HashMap<String, Vec<PathBuf>>> {
+) -> Result<HashMap<String, Vec<std::path::PathBuf>>> {
     let target_dir = file_ops::get_target_directory(target_base);
 
-    let total_files: usize = organized_images.values().map(std::vec::Vec::len).sum();
+    let total_files: usize = organized_files.values().map(std::vec::Vec::len).sum();
     if total_files == 0 {
         return Ok(HashMap::new());
     }
@@ -185,7 +185,7 @@ fn copy_files_to_target(
     let mut copied_files = HashMap::new();
     let mut copy_errors = Vec::new();
 
-    for (date, files) in organized_images {
+    for (date, files) in organized_files {
         let mut files_for_date = Vec::new();
 
         if let Some((year, month, day)) = date_utils::parse_date_string(date) {

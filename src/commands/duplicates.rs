@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use console::style;
-use image_manager_lib::{ImageManager, ImageManagerConfig};
+use imgdedup::{ImgDedup, ImgDedupConfig, SimilarityThreshold};
 
 use super::DuplicatesArgs;
 use crate::export::{data::DuplicateGroup, export_data, ExportData};
@@ -13,9 +13,9 @@ pub fn handle_duplicates(args: &DuplicatesArgs) -> Result<()> {
     validation::validate_duplicates_args(args)?;
 
     let progress = create_scanner_progress();
-    progress.set_message("Initializing image manager...");
+    progress.set_message("Initializing image deduplicator...");
 
-    let mut config = ImageManagerConfig {
+    let mut config = ImgDedupConfig {
         recursive_scan: args.recursive,
         similarity_threshold: args
             .get_similarity_threshold()
@@ -26,17 +26,17 @@ pub fn handle_duplicates(args: &DuplicatesArgs) -> Result<()> {
 
     config.duplicate_mode = args.mode.into();
 
-    let manager = ImageManager::with_config(config.clone());
-    progress.finish_with_message("Image manager initialized");
+    let dedup = ImgDedup::with_config(config.clone());
+    progress.finish_with_message("Image deduplicator initialized");
 
-    let progress_handle = image_manager_lib::ProgressHandle::new();
+    let progress_handle = imgdedup::ProgressHandle::new();
     let progress_for_monitoring = progress_handle.clone();
 
     let monitor_handle =
         start_progress_monitoring(progress_for_monitoring, "Scanning for duplicate images...");
 
     let operation_start = std::time::Instant::now();
-    let (duplicate_groups, errors) = manager
+    let (duplicate_groups, errors) = dedup
         .find_duplicates_with_progress(&args.directory, &progress_handle)
         .with_context(|| "Failed to find duplicates")?;
 
@@ -62,10 +62,10 @@ pub fn handle_duplicates(args: &DuplicatesArgs) -> Result<()> {
 }
 
 fn display_duplicates_results(
-    duplicate_groups: &image_manager_lib::duplicates::DuplicateGroups,
-    errors: &[image_manager_lib::ProcessingError],
+    duplicate_groups: &imgdedup::DuplicateGroups,
+    errors: &[imgdedup::ProcessingError],
     args: &DuplicatesArgs,
-    similarity_threshold: &image_manager_lib::SimilarityThreshold,
+    similarity_threshold: &SimilarityThreshold,
 ) -> Result<()> {
     println!(
         "\n{} {}",
